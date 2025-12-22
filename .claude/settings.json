@@ -1,0 +1,39 @@
+{
+  "hooks": {
+    "session_start": [
+      {
+        "type": "command",
+        "command": "just status 2>/dev/null || echo 'just not available'",
+        "description": "Show project status on session start"
+      }
+    ],
+    "pre_tool_call": [
+      {
+        "type": "command",
+        "command": "just check-secrets 2>/dev/null || true",
+        "description": "Check for secrets before file operations",
+        "tools": ["Write", "Edit"],
+        "blocking": true
+      }
+    ],
+    "post_tool_call": [
+      {
+        "type": "command",
+        "command": "just check-syntax 2>/dev/null || true",
+        "description": "Validate syntax after file changes",
+        "tools": ["Write", "Edit"],
+        "glob": "adapters/*.js"
+      }
+    ]
+  },
+  "permissions": {
+    "allow_read": ["adapters/", "tests/", "examples/", "docs/", "*.scm", "*.md", "*.adoc"],
+    "allow_write": ["adapters/", "tests/", "examples/", "docs/"],
+    "allow_run": ["just", "deno", "git"]
+  },
+  "behavior": {
+    "auto_lint": true,
+    "auto_format": true,
+    "require_spdx": true
+  }
+}
