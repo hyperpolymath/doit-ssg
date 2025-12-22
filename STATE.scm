@@ -2,6 +2,13 @@
 ;; SPDX-License-Identifier: AGPL-3.0-or-later
 ;; SPDX-FileCopyrightText: 2025 Jonathan D.A. Jewell
 
+(define-module (doit-ssg state)
+  #:export (metadata current-position roadmap blockers session-history))
+
+;; ============================================================================
+;; PROJECT METADATA
+;; ============================================================================
+
 (define metadata
   '((version . "0.1.0") (updated . "2025-12-17") (project . "doit-ssg")))
 

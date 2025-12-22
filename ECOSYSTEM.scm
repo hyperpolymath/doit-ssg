@@ -17,6 +17,7 @@
       (name "poly-ssg-mcp")
       (url "https://github.com/hyperpolymath/poly-ssg-mcp")
       (relationship "hub")
+      (sync-direction "hub -> satellite")
       (description "Unified MCP server for 28 SSGs - provides adapter interface")
       (differentiation
         "poly-ssg-mcp = Hub with all SSG adapters via MCP protocol
