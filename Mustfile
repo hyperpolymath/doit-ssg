@@ -1,0 +1,223 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2025 Jonathan D.A. Jewell
+# Mustfile — doit-ssg mandatory checks
+# RSR-compliant mandatory gates that MUST pass before merge
+
+# ============================================================================
+# MANDATORY GATES
+# These checks MUST pass before any merge to main
+# ============================================================================
+
+[must]
+# All mandatory checks that must pass
+all = ["lint", "security", "test", "docs"]
+
+[must.lint]
+# Code quality must be maintained
+description = "Code must pass all linters"
+command = "just lint"
+blocking = true
+
+[must.security]
+# Security checks are non-negotiable
+description = "No secrets or vulnerabilities"
+commands = [
+    "just check-secrets",
+    "just audit"
+]
+blocking = true
+
+[must.test]
+# Tests must pass
+description = "All tests must pass"
+command = "just test-all"
+blocking = true
+coverage_minimum = 70
+
+[must.docs]
+# Documentation must be valid
+description = "Documentation must be valid"
+command = "just docs-check"
+blocking = false
+
+# ============================================================================
+# ADAPTER REQUIREMENTS
+# ============================================================================
+
+[must.adapters]
+# Adapter interface compliance
+description = "Adapters must implement required interface"
+command = "just adapter-verify"
+blocking = true
+
+[must.adapters.interface]
+# Required exports for all adapters
+required_exports = [
+    "name",
+    "language",
+    "description",
+    "connect",
+    "disconnect",
+    "isConnected",
+    "tools"
+]
+
+# ============================================================================
+# COMMIT REQUIREMENTS
+# ============================================================================
+
+[must.commit]
+# Commit message format
+description = "Commits must follow conventional commits"
+pattern = "^(feat|fix|docs|style|refactor|test|chore|security)(\\(.+\\))?: .+"
+blocking = true
+
+[must.commit.signed]
+# Signed commits recommended
+description = "Commits should be signed"
+command = "git log -1 --show-signature"
+blocking = false
+
+# ============================================================================
+# BRANCH REQUIREMENTS
+# ============================================================================
+
+[must.branch]
+# Branch naming conventions
+description = "Branch must follow naming convention"
+patterns = [
+    "^main$",
+    "^docs/.*",
+    "^test/.*",
+    "^feat/.*",
+    "^fix/.*",
+    "^refactor/.*",
+    "^security/.*",
+    "^claude/.*"
+]
+blocking = false
+
+[must.branch.protected]
+# Protected branches
+protected = ["main"]
+require_review = true
+require_ci = true
+
+# ============================================================================
+# FILE REQUIREMENTS
+# ============================================================================
+
+[must.files]
+# Required files for RSR compliance
+description = "Required files must exist"
+required = [
+    "README.adoc",
+    "LICENSE.txt",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CODE_OF_CONDUCT.md",
+    "justfile",
+    ".gitignore",
+    ".github/workflows/codeql.yml"
+]
+blocking = true
+
+[must.files.spdx]
+# SPDX headers required
+description = "Source files must have SPDX headers"
+pattern = "SPDX-License-Identifier:"
+extensions = [".js", ".ts", ".scm"]
+blocking = true
+
+# ============================================================================
+# SECURITY REQUIREMENTS
+# ============================================================================
+
+[must.security.secrets]
+# No secrets in code
+description = "No hardcoded secrets allowed"
+patterns_forbidden = [
+    "password\\s*=\\s*['\"]",
+    "api_key\\s*=\\s*['\"]",
+    "secret\\s*=\\s*['\"]",
+    "token\\s*=\\s*['\"]"
+]
+blocking = true
+
+[must.security.dependencies]
+# Dependency security
+description = "Dependencies must be secure"
+command = "npm audit --audit-level=high"
+blocking = true
+
+[must.security.actions]
+# GitHub Actions must be SHA-pinned
+description = "Actions must use SHA pins"
+pattern = "uses: .+@[a-f0-9]{40}"
+file = ".github/workflows/*.yml"
+blocking = true
+
+# ============================================================================
+# PRE-COMMIT HOOKS
+# ============================================================================
+
+[hooks.pre-commit]
+# Run before commit
+commands = [
+    "just fmt-check",
+    "just check-secrets",
+    "just check-syntax"
+]
+
+[hooks.pre-push]
+# Run before push
+commands = [
+    "just test",
+    "just lint"
+]
+
+# ============================================================================
+# CI GATES
+# ============================================================================
+
+[ci.gates]
+# Gates for CI pipeline
+stages = ["lint", "test", "security", "build"]
+
+[ci.gates.lint]
+order = 1
+command = "just lint"
+fail_fast = true
+
+[ci.gates.test]
+order = 2
+command = "just test-all"
+fail_fast = true
+
+[ci.gates.security]
+order = 3
+command = "just check-secrets && just audit"
+fail_fast = true
+
+[ci.gates.build]
+order = 4
+command = "just build-prod"
+fail_fast = false
+
+# ============================================================================
+# RELEASE GATES
+# ============================================================================
+
+[release.gates]
+# Additional gates for releases
+require = ["ci.gates", "must.all"]
+
+[release.gates.changelog]
+description = "CHANGELOG must be updated"
+file = "CHANGELOG.md"
+blocking = true
+
+[release.gates.version]
+description = "Version must be updated"
+files = ["STATE.scm", "package.json"]
+blocking = true

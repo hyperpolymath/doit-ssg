@@ -1,0 +1,808 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2025 Jonathan D.A. Jewell
+= doit-ssg Cookbook
+:toc: left
+:toclevels: 3
+:sectnums:
+:icons: font
+:source-highlighter: rouge
+
+A comprehensive guide to CLI commands, Just recipes, and Nickel formulae for the doit-ssg satellite SSG.
+
+== Quick Reference
+
+[cols="1,2,3"]
+|===
+|Category |Command |Description
+
+|<<cli-commands>>
+|`just build`
+|Build all adapters
+
+|<<just-recipes>>
+|`just test-all`
+|Run all tests with coverage
+
+|<<nickel-formulae>>
+|`nickel eval config.ncl`
+|Evaluate Nickel configuration
+|===
+
+[[cli-commands]]
+== CLI Commands
+
+Command-line interface for direct interaction with doit-ssg.
+
+=== Core Operations
+
+[[cli-build]]
+==== Build
+
+[source,bash]
+----
+# Build all adapters
+just build
+
+# Build for production
+just build-prod
+
+# Clean build artifacts
+just clean
+----
+
+[[cli-test]]
+==== Test
+
+[source,bash]
+----
+# Run all tests
+just test
+
+# Run unit tests only
+just test-unit
+
+# Run end-to-end tests
+just test-e2e
+
+# Run all tests with coverage
+just test-all
+----
+
+[[cli-lint]]
+==== Lint & Format
+
+[source,bash]
+----
+# Run all linters
+just lint
+
+# Lint JavaScript only
+just lint-js
+
+# Security linting
+just lint-security
+
+# Format code
+just fmt
+
+# Check format without modifying
+just fmt-check
+----
+
+=== Adapter Management
+
+[[cli-adapters]]
+==== Adapter Commands
+
+[source,bash]
+----
+# List all adapters (28 total)
+just adapters
+
+# Count adapters
+just adapter-count
+
+# Sync adapters from hub
+just adapter-sync
+
+# Verify adapter interface
+just adapter-verify
+----
+
+==== Adapter CLI Combinations
+
+[source,bash]
+----
+# Full adapter validation pipeline
+just adapter-verify && just test-adapters && just lint-js
+
+# Quick adapter check
+just check-syntax && just adapters
+
+# Adapter development workflow
+just adapter-verify; just test-adapters; just fmt
+----
+
+=== Security Operations
+
+[[cli-security]]
+==== Security Commands
+
+[source,bash]
+----
+# Check for hardcoded secrets
+just check-secrets
+
+# Run security audit
+just audit
+
+# Full security pipeline
+just lint-security && just check-secrets && just audit
+----
+
+=== Development Workflow
+
+[[cli-dev]]
+==== Development Commands
+
+[source,bash]
+----
+# Start development mode
+just dev
+
+# Start language server
+just lsp
+
+# Compile specific adapter
+just compile zola
+
+# Check all files
+just check
+----
+
+=== CI/CD Operations
+
+[[cli-cicd]]
+==== CI/CD Commands
+
+[source,bash]
+----
+# Run full CI pipeline locally
+just ci
+
+# Prepare for release
+just release-prep 0.2.0
+
+# Show project status
+just status
+
+# Show version
+just version
+----
+
+=== Container Operations
+
+[[cli-container]]
+==== Container Commands
+
+[source,bash]
+----
+# Build container image
+just container-build
+
+# Run in container
+just container-run
+
+# Full container workflow
+just container-build && just container-run
+----
+
+=== Nix Operations
+
+[[cli-nix]]
+==== Nix Commands
+
+[source,bash]
+----
+# Enter Nix development shell
+just nix-dev
+
+# Build with Nix
+just nix-build
+
+# Update Nix flake
+just nix-update
+----
+
+[[cli-permutations]]
+=== CLI Permutations & Concatenations
+
+Common command combinations for various workflows.
+
+==== Development Permutations
+
+[source,bash]
+----
+# Fresh development start
+just clean && just build && just test
+
+# Pre-commit check
+just fmt-check && just lint && just check-secrets
+
+# Full validation before push
+just ci && just adapter-verify
+
+# Quick iteration cycle
+just check-syntax && just test-unit
+
+# Complete development cycle
+just clean; just build; just test-all; just lint; just docs-check
+----
+
+==== Release Permutations
+
+[source,bash]
+----
+# Pre-release validation
+just ci && just release-prep $(cat VERSION)
+
+# Full release pipeline
+just clean && just ci && just container-build
+
+# Documentation update
+just docs && just docs-check
+
+# Version bump workflow
+just test-all && just release-prep 0.2.0
+----
+
+==== Security Permutations
+
+[source,bash]
+----
+# Full security audit
+just check-secrets && just audit && just lint-security
+
+# Pre-merge security check
+just lint-security; just check-secrets; just test
+
+# Paranoid mode
+just clean && just check-secrets && just audit && just lint && just test-all
+----
+
+==== Adapter Permutations
+
+[source,bash]
+----
+# Full adapter validation
+just adapter-count && just adapter-verify && just test-adapters
+
+# Adapter update workflow
+just adapter-sync && just adapter-verify && just test-adapters
+
+# Single adapter development
+just check-syntax && just compile zola && just test-adapters
+----
+
+[[just-recipes]]
+== Just Recipes
+
+Comprehensive reference for all justfile recipes.
+
+=== Recipe Categories
+
+[cols="1,3"]
+|===
+|Category |Recipes
+
+|Build
+|`build`, `build-prod`, `clean`
+
+|Test
+|`test`, `test-unit`, `test-adapters`, `test-e2e`, `test-all`
+
+|Lint
+|`lint`, `lint-js`, `lint-security`, `fmt`, `fmt-check`
+
+|Security
+|`check-secrets`, `codeql`, `audit`
+
+|Development
+|`check-syntax`, `check`, `dev`, `lsp`, `compile`
+
+|Adapters
+|`adapters`, `adapter-count`, `adapter-sync`, `adapter-verify`
+
+|Documentation
+|`docs`, `docs-check`
+
+|CI/CD
+|`ci`, `release-prep`
+
+|Container
+|`container-build`, `container-run`
+
+|Nix
+|`nix-dev`, `nix-build`, `nix-update`
+
+|Utility
+|`status`, `version`, `help`
+|===
+
+=== Recipe Dependencies
+
+[source]
+----
+build-prod
+├── check-syntax
+└── lint
+    ├── lint-js
+    └── lint-security
+        └── check-secrets
+
+ci
+├── clean
+├── check
+│   ├── check-syntax
+│   └── lint
+├── test-all
+│   ├── test
+│   │   ├── test-unit
+│   │   └── test-adapters
+│   └── test-e2e
+└── lint
+
+release-prep
+└── ci
+----
+
+=== Custom Recipe Examples
+
+==== Create New Recipes
+
+[source,just]
+----
+# Custom: Run specific adapter tests
+test-adapter name:
+    @echo "Testing {{name}} adapter..."
+    deno test adapters/{{name}}.js --allow-read --allow-run
+
+# Custom: Generate adapter documentation
+adapter-docs:
+    @echo "Generating adapter documentation..."
+    @for f in adapters/*.js; do \
+        name=$$(basename "$$f" .js); \
+        echo "## $$name" >> docs/adapters.md; \
+        grep "export const description" "$$f" >> docs/adapters.md; \
+    done
+
+# Custom: Benchmark adapters
+benchmark:
+    @echo "Benchmarking adapters..."
+    @time just test-adapters
+
+# Custom: Watch mode
+watch:
+    @echo "Watching for changes..."
+    watchexec -e js,ts just check-syntax
+----
+
+[[nickel-formulae]]
+== Nickel Formulae
+
+Configuration and validation using Nickel language.
+
+=== Project Configuration
+
+[[nickel-config]]
+==== config.ncl
+
+[source,nickel]
+----
+# doit-ssg project configuration
+{
+  project = {
+    name = "doit-ssg",
+    version = "0.1.0",
+    type = "satellite-ssg",
+    ecosystem = "hyperpolymath",
+  },
+
+  adapters = {
+    count = 28,
+    runtime = "deno",
+    sync_source = "poly-ssg-mcp",
+  },
+
+  build = {
+    formatter = "deno fmt",
+    linter = "deno lint",
+    test_framework = "deno test",
+    coverage_minimum = 70,
+  },
+
+  security = {
+    sast = "CodeQL",
+    credentials = "env_vars_only",
+    actions_pinned = true,
+  },
+}
+----
+
+=== Validation Contracts
+
+[[nickel-contracts]]
+==== contracts.ncl
+
+[source,nickel]
+----
+# Adapter interface contract
+let AdapterContract = {
+  name | String,
+  language | String,
+  description | String,
+  connect | fun -> Bool,
+  disconnect | fun -> Void,
+  isConnected | fun -> Bool,
+  tools | Array {
+    name | String,
+    description | String,
+    inputSchema | Dyn,
+    execute | fun -> Dyn,
+  },
+}
+
+# Security policy contract
+let SecurityPolicy = {
+  secrets_check | Bool | default = true,
+  audit_enabled | Bool | default = true,
+  sast_tool | String | default = "CodeQL",
+  min_coverage | Number | default = 70,
+}
+
+# RSR compliance contract
+let RSRCompliance = {
+  spdx_headers | Bool | default = true,
+  sha_pinned_actions | Bool | default = true,
+  signed_commits | Bool | default = false,
+  required_files | Array String | default = [
+    "README.adoc",
+    "LICENSE.txt",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "justfile",
+  ],
+}
+----
+
+=== Build Configuration
+
+[[nickel-build]]
+==== build.ncl
+
+[source,nickel]
+----
+# Build configuration
+let Build = {
+  # Development build
+  dev = {
+    optimize = false,
+    sourcemaps = true,
+    watch = true,
+  },
+
+  # Production build
+  prod = {
+    optimize = true,
+    sourcemaps = false,
+    minify = true,
+    bundle = true,
+  },
+
+  # Test build
+  test = {
+    coverage = true,
+    verbose = true,
+    bail = false,
+  },
+}
+
+# Environment configuration
+let Env = fun env =>
+  if env == "development" then Build.dev
+  else if env == "production" then Build.prod
+  else if env == "test" then Build.test
+  else Build.dev
+----
+
+=== Adapter Configuration
+
+[[nickel-adapters]]
+==== adapters.ncl
+
+[source,nickel]
+----
+# Adapter registry
+let Adapters = {
+  # Rust-based SSGs
+  rust = ["zola", "cobalt", "mdbook"],
+
+  # Haskell-based SSGs
+  haskell = ["hakyll", "ema"],
+
+  # Elixir-based SSGs
+  elixir = ["serum", "nimble-publisher", "tableau"],
+
+  # Julia-based SSGs
+  julia = ["franklin", "documenter", "staticwebpages"],
+
+  # Clojure-based SSGs
+  clojure = ["cryogen", "perun", "babashka"],
+
+  # Racket-based SSGs
+  racket = ["frog", "pollen"],
+
+  # Other languages
+  other = [
+    "laika",      # Scala
+    "orchid",     # Kotlin
+    "fornax",     # F#
+    "yocaml",     # OCaml
+    "nimrod",     # Nim
+    "marmot",     # Crystal
+    "publish",    # Swift
+    "reggae",     # D
+    "wub",        # Tcl
+    "zotonic",    # Erlang
+    "coleslaw",   # Common Lisp
+    "scalatex",   # Scala
+  ],
+
+  # Get all adapters
+  all = rust @ haskell @ elixir @ julia @ clojure @ racket @ other,
+
+  # Count
+  count = std.array.length all,
+}
+----
+
+=== CI/CD Pipeline
+
+[[nickel-cicd]]
+==== pipeline.ncl
+
+[source,nickel]
+----
+# CI/CD pipeline configuration
+let Pipeline = {
+  stages = [
+    {
+      name = "lint",
+      commands = ["just lint", "just fmt-check"],
+      fail_fast = true,
+    },
+    {
+      name = "test",
+      commands = ["just test-all"],
+      fail_fast = true,
+      coverage = {
+        enabled = true,
+        minimum = 70,
+      },
+    },
+    {
+      name = "security",
+      commands = ["just check-secrets", "just audit"],
+      fail_fast = true,
+    },
+    {
+      name = "build",
+      commands = ["just build-prod"],
+      fail_fast = false,
+      artifacts = ["dist/"],
+    },
+  ],
+
+  # Trigger conditions
+  triggers = {
+    push = ["main"],
+    pull_request = ["main"],
+    schedule = "0 20 * * 0",  # Weekly Sunday 20:00
+  },
+
+  # Environment
+  environment = {
+    runner = "ubuntu-latest",
+    permissions = {
+      contents = "read",
+      security_events = "write",
+    },
+  },
+}
+----
+
+[[nickel-eval]]
+=== Evaluating Nickel
+
+[source,bash]
+----
+# Evaluate configuration
+nickel eval config.ncl
+
+# Type check contracts
+nickel typecheck contracts.ncl
+
+# Export to JSON
+nickel export config.ncl --format json
+
+# Validate against contract
+nickel query 'project.name' config.ncl
+
+# Merge configurations
+nickel eval -f build.ncl -f adapters.ncl
+----
+
+[[hooks]]
+== Hooks Configuration
+
+=== Git Hooks
+
+[[hooks-git]]
+==== Pre-commit Hook
+
+[source,bash]
+----
+#!/bin/bash
+# .git/hooks/pre-commit
+set -e
+
+echo "Running pre-commit checks..."
+
+# Format check
+just fmt-check || {
+    echo "Format check failed. Run 'just fmt' to fix."
+    exit 1
+}
+
+# Secret check
+just check-secrets || {
+    echo "Secrets detected! Remove them before committing."
+    exit 1
+}
+
+# Syntax check
+just check-syntax || {
+    echo "Syntax errors found."
+    exit 1
+}
+
+echo "Pre-commit checks passed."
+----
+
+==== Pre-push Hook
+
+[source,bash]
+----
+#!/bin/bash
+# .git/hooks/pre-push
+set -e
+
+echo "Running pre-push checks..."
+
+# Run tests
+just test || {
+    echo "Tests failed!"
+    exit 1
+}
+
+# Run linters
+just lint || {
+    echo "Linting failed!"
+    exit 1
+}
+
+echo "Pre-push checks passed."
+----
+
+=== Claude Code Hooks
+
+[[hooks-claude]]
+==== Session Start Hook
+
+[source,json]
+----
+{
+  "hooks": {
+    "session_start": [
+      {
+        "type": "command",
+        "command": "just status",
+        "description": "Show project status on session start"
+      },
+      {
+        "type": "command",
+        "command": "just adapter-count",
+        "description": "Display adapter count"
+      }
+    ],
+    "pre_tool_call": [
+      {
+        "type": "command",
+        "command": "just check-secrets",
+        "description": "Check for secrets before tool execution",
+        "tools": ["Write", "Edit"]
+      }
+    ],
+    "post_tool_call": [
+      {
+        "type": "command",
+        "command": "just check-syntax",
+        "description": "Validate syntax after file changes",
+        "tools": ["Write", "Edit"],
+        "glob": "adapters/*.js"
+      }
+    ]
+  }
+}
+----
+
+[[appendix]]
+== Appendix
+
+=== Command Quick Reference
+
+[cols="1,1,2"]
+|===
+|Command |Type |Description
+
+|`just build`
+|Just
+|Build all adapters
+
+|`just test-all`
+|Just
+|Run all tests
+
+|`just ci`
+|Just
+|Full CI pipeline
+
+|`just adapter-verify`
+|Just
+|Verify adapter interface
+
+|`nickel eval config.ncl`
+|Nickel
+|Evaluate configuration
+
+|`just check-secrets`
+|Just
+|Security check
+|===
+
+=== Environment Variables
+
+[cols="1,1,2"]
+|===
+|Variable |Default |Description
+
+|`DENO_DIR`
+|`~/.cache/deno`
+|Deno cache directory
+
+|`NO_COLOR`
+|unset
+|Disable color output
+
+|`JUST_CHOOSER`
+|`fzf`
+|Interactive recipe chooser
+|===
+
+=== Related Files
+
+* <<justfile>> - Task runner configuration
+* <<Mustfile>> - Mandatory gates
+* <<.github/workflows/codeql.yml>> - CI/CD pipeline
+* <<STATE.scm>> - Project roadmap
+* <<CONTRIBUTING.md>> - Development guide
